@@ -8,13 +8,19 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Endpoint trung gian nhận request từ client của bạn
-app.post('/api/get-momo-history', async (req, res) => {
+// 1. Thêm phương thức GET để khi bạn bấm link trực tiếp trên trình duyệt điện thoại không bị lỗi "Cannot GET"
+app.get('/get-momo-history', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: "API Proxy MoMo đang hoạt động bình thường! Hãy dùng phương thức POST để gọi lấy lịch sử giao dịch."
+    });
+});
+
+// 2. Phương thức POST chính để gọi sang MoMo
+app.post('/get-momo-history', async (req, res) => {
     try {
-        // Lấy body từ request gửi lên (nếu có, ví dụ: khoảng thời gian, số lượng giao dịch,...)
         const requestBody = req.body;
 
-        // Các headers gốc lấy từ cấu hình của bạn
         const momoHeaders = {
             "Host": "api.momo.vn",
             "sessionKey": "f9acdb51-90bd-46ae-aac3-614af458afba",
@@ -33,7 +39,7 @@ app.post('/api/get-momo-history', async (req, res) => {
             "wbCode": "0&1788553453061",
             "Content-Type": "application/json",
             "Connection": "keep-alive",
-            "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyIjoiMDE2ODI5NjIxODIiLCJpbWVpIjoiNTEwOI...", // Rút gọn bớt chuỗi dài nếu cần, hoặc giữ nguyên chuỗi bạn cung cấp
+            "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyIjoiMDE2ODI5NjIxODIiLCJpbWVpIjoiNTEwMDEtMWIxYjAyMWQ1NDgyZjA4MWVkODY1ZmJkM2UwMDAwYWYyNzU4ZmIxMmUxOGRiZGUzZGMwOTM1MWI5NDI1ZWY1MyIsImhJbWVpIjoiOEZiSVBHVkI4dEsyajNkRWd2dWZURDZXTU5LWkhVMmxtWWdMRlZUNDZLOXhNM055bzRxdXRYV1FYNTlPbU1NSkh1c0pzck9ub1pqazl6RysveXAzaktidnlseER2ZHhTZC9mSlV1cUJESms9IiwiTUFQX1NBQ09NX0NBUkQiOjAsIk5BTUUiOiJUcuG6p24gTmjhuq10IEhvw6BuZyIsIkRFVklDRV9PUyI6ImlvcyIsIkFQUF9WRVIiOjUxNTAwLCJhZ2VudF9pZCI6MTEwMzM1MTY0LCJzZXNzaW9uS2V5IjoiUG5QTWxzbjQ5VktNRytKTGU3aWtqWDQ5cWZTbDBoU3VtMEVRVmgxMG45NFRkWHl3NzNQNENRPT0iLCJ1c2VyX3R5cGUiOjEsImtleSI6Im1vbW8iLCJyYXBpZF9pZCI6ImMvcFVYY28zZnd4WTlNRC85S1VOb2VaalArT0N4cUF3ZkFsNlZGaUtjN2JTamt1TDRKcVZzUTRZNnJ3Z0I0NFRnTld4MkZxZlAvYz0iLCJ1aWQiOiIwMzgyOTYyMTgyIiwiZXhwIjoxNzg4ODEyNjI1fQ.RQU3K-smSVZtTSOdr1YkN-ZVJjgQV4EsFteozfUDBywBVrW7sieiuSXrf2Zi1rhWzWRJjW1eFdXCFltbRYOLZDUg2qb79G0hRZZb2DlPMVRrY8R-Bvn_UYB9-5v-MFiQwgvc4Xi3P1MzEHV9O1KpodKccP1G2ksFY4VvMDiZwXfXDFXFWYJ0-YvvtlkjRL7vuiID2O-ITKVaaQ9l5YBDkprQukOWlczKwCuarb95qZaApZUtXQranB5Q2jvG3xbO3wGt8R-7x3ou5DDH5SF5q9HwxnQBctLYphIO9FKaJYYXh4uVtxpjkKSsF9FQd8fVXgoTWgCmp1orKJ-0IEGjCw",
             "env": "production",
             "app_type": "production",
             "device_os": "IOS",
@@ -47,14 +53,12 @@ app.post('/api/get-momo-history', async (req, res) => {
             "platform-timestamp": Date.now().toString()
         };
 
-        // Gửi request sang MoMo API
         const response = await axios.post(
             'https://api.momo.vn/transhis/api/transhis/golden-pocket/trans/browse',
             requestBody,
             { headers: momoHeaders }
         );
 
-        // Trả kết quả về cho client/Render frontend của bạn
         return res.status(200).json({
             success: true,
             data: response.data
